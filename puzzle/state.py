@@ -25,19 +25,48 @@ class State:
         return self.tiles.index(0)
 
     def neighbors(self) -> List["State"]:
-        """Retorna os estados filhos válidos a partir deste estado."""
-        # TODO: implemente a geração de estados filhos
-        raise NotImplementedError
+        """Retorna os estados filhos válidos a partir deste estado.
+
+        Cada ação move o espaço vazio (0): UP, DOWN, LEFT ou RIGHT.
+        O filho guarda este estado como pai, a ação aplicada e custo + 1.
+        """
+        blank = self.blank_index
+        row, col = divmod(blank, 3)
+        tiles = list(self.tiles)
+        children: List[State] = []
+
+        moves = []
+        if row > 0:
+            moves.append((-3, "UP"))
+        if row < 2:
+            moves.append((3, "DOWN"))
+        if col > 0:
+            moves.append((-1, "LEFT"))
+        if col < 2:
+            moves.append((1, "RIGHT"))
+
+        for delta, action in moves:
+            swap = blank + delta
+            new_tiles = tiles.copy()
+            new_tiles[blank], new_tiles[swap] = new_tiles[swap], new_tiles[blank]
+            children.append(
+                State(tuple(new_tiles), parent=self, action=action, cost=self.cost + 1)
+            )
+        return children
 
     def path(self) -> List["State"]:
         """Retorna a sequência de estados do estado inicial até este."""
-        # TODO: implemente a reconstrução do caminho usando self.parent
-        raise NotImplementedError
+        states: List[State] = []
+        node: Optional[State] = self
+        while node is not None:
+            states.append(node)
+            node = node.parent
+        states.reverse()
+        return states
 
     def actions(self) -> List[str]:
         """Retorna a sequência de ações do estado inicial até este."""
-        # TODO: implemente usando path()
-        raise NotImplementedError
+        return [state.action for state in self.path() if state.action is not None]
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, State) and self.tiles == other.tiles
